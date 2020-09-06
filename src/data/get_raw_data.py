@@ -1,6 +1,8 @@
+import distutils.util
 import os.path
 import requests
 import logging
+from dotenv import find_dotenv, load_dotenv
 
 
 def download_data(url, filename, path):
@@ -67,29 +69,31 @@ def main(project_dir):
                       'donnees-hospitalieres-etablissements-covid19-raw.csv', raw_data_path))
 
     # Metadata
+    download_metadata = os.environ.get("DOWNLOAD_METADATA")
 
-    # create directory if necessary
-    create_directory_if_necessary(metadata_raw_data_path)
+    if bool(distutils.util.strtobool(download_metadata)):
+        # create directory if necessary
+        create_directory_if_necessary(metadata_raw_data_path)
 
-    # Metadata - Donnees hospitalieres
-    data_list.append(('https://www.data.gouv.fr/fr/datasets/r/3f0f1885-25f4-4102-bbab-edec5a58e34a',
-                      'metadonnees-donnees-hospitalieres-covid19.csv', metadata_raw_data_path))
+        # Metadata - Donnees hospitalieres
+        data_list.append(('https://www.data.gouv.fr/fr/datasets/r/3f0f1885-25f4-4102-bbab-edec5a58e34a',
+                          'metadonnees-donnees-hospitalieres-covid19.csv', metadata_raw_data_path))
 
-    # Metadata - Donnees hospitalieres nouveaux
-    data_list.append(('https://www.data.gouv.fr/fr/datasets/r/4900f53f-750d-4c5a-9df7-2d4ceb018acf',
-                      'metadonnees-donnees-hospitalieres-covid19-nouveaux.csv', metadata_raw_data_path))
+        # Metadata - Donnees hospitalieres nouveaux
+        data_list.append(('https://www.data.gouv.fr/fr/datasets/r/4900f53f-750d-4c5a-9df7-2d4ceb018acf',
+                          'metadonnees-donnees-hospitalieres-covid19-nouveaux.csv', metadata_raw_data_path))
 
-    # Metadata - Donnees hospitalieres classe age
-    data_list.append(('https://www.data.gouv.fr/fr/datasets/r/929dff1b-b07c-4637-9690-fb7219ad3eb8',
-                      'metadonnees-donnees-hospitalieres-covid19-classes-age.csv', metadata_raw_data_path))
+        # Metadata - Donnees hospitalieres classe age
+        data_list.append(('https://www.data.gouv.fr/fr/datasets/r/929dff1b-b07c-4637-9690-fb7219ad3eb8',
+                          'metadonnees-donnees-hospitalieres-covid19-classes-age.csv', metadata_raw_data_path))
 
-    # Metadata - services hospitaliers
-    data_list.append(('https://www.data.gouv.fr/fr/datasets/r/415c852b-7898-40f8-8f71-b9171faf4516',
-                      'metadonnees-services_hospitaliers-covid19.csv', metadata_raw_data_path))
+        # Metadata - services hospitaliers
+        data_list.append(('https://www.data.gouv.fr/fr/datasets/r/415c852b-7898-40f8-8f71-b9171faf4516',
+                          'metadonnees-services_hospitaliers-covid19.csv', metadata_raw_data_path))
 
-    # Metadata - sexe
-    data_list.append(('https://www.data.gouv.fr/fr/datasets/r/9f94a259-2a8a-441d-bd0b-d6b45697d477',
-                      'metadonnees-sexe-covid19.csv', metadata_raw_data_path))
+        # Metadata - sexe
+        data_list.append(('https://www.data.gouv.fr/fr/datasets/r/9f94a259-2a8a-441d-bd0b-d6b45697d477',
+                          'metadonnees-sexe-covid19.csv', metadata_raw_data_path))
 
     for url, filename, path in data_list:
         download_data(url, filename, path)
@@ -102,6 +106,11 @@ if __name__ == '__main__':
     # setup logger
     log_fmt = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     logging.basicConfig(level=logging.INFO, format=log_fmt)
+
+    # find .env automatically by walking up directories until it's found
+    dotenv_path = find_dotenv()
+    # load up the entries as environment variables
+    load_dotenv(dotenv_path)
 
     # call the main
     main(project_dir)
