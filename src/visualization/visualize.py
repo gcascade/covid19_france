@@ -63,7 +63,7 @@ def main(project_dir):
     tend_rea_plot.get_figure().clear()
 
     tend_rad_plot = last_month_df.sum()['rad'].plot(title=last_month_title + ' - Retours à domicile', figsize=(10, 10))
-    tend_rad_plot.get_figure().savefig(os.path.join(project_dir, 'reports/figures/' + today + '/reanimations-tendances.png'))
+    tend_rad_plot.get_figure().savefig(os.path.join(project_dir, 'reports/figures/' + today + '/retours-a-domicile-tendances.png'))
     tend_rad_plot.get_figure().clear()
 
     tend_dc_plot = last_month_df.sum()['dc'].plot(title=last_month_title + ' - Décès', figsize=(10, 10))
@@ -84,7 +84,7 @@ def main(project_dir):
     at_rea_plot.get_figure().clear()
 
     at_rad_plot = covid_df_grouped.sum()['rad'].plot(title='Retours à domicile', figsize=(10, 10))
-    at_rad_plot.get_figure().savefig(os.path.join(project_dir, 'reports/figures/' + today + '/reanimations.png'))
+    at_rad_plot.get_figure().savefig(os.path.join(project_dir, 'reports/figures/' + today + '/retours-a-domicile.png'))
     at_rad_plot.get_figure().clear()
 
     at_dc_plot = covid_df_grouped.sum()['dc'].plot(title='Décès dus au COVID-19', figsize=(10, 10))
