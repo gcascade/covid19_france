@@ -6,6 +6,9 @@ import re
 from datetime import date, timedelta
 from dotenv import find_dotenv, load_dotenv
 
+from src.enum.PlotType import PlotType
+
+
 def main(project_dir):
     '''
     main method
@@ -42,7 +45,7 @@ def main(project_dir):
     all_gender_filter = covid_df['sexe'] == 0
 
     date_pattern = re.compile("[0-9]{4}-[0-9]{2}-[0-9]{2}")
-    pattern_matcher_filter = covid_df['jour'].str.match(pat = date_pattern)
+    pattern_matcher_filter = covid_df['jour'].str.match(pat=date_pattern)
 
     last_month = date.today() - timedelta(days=30)
     last_month_filter = covid_df['jour'] >= last_month.strftime('%Y-%m-%d')
@@ -55,31 +58,33 @@ def main(project_dir):
 
     # Tendances
     tend_hosp_plot = last_month_df.sum()['hosp'].plot(title=last_month_title + ' - Hospitalisations', figsize=(10, 10))
-    tend_hosp_plot.get_figure().savefig(os.path.join(project_dir, 'reports/figures/' + today + '/hospitalisations-tendances.png'))
+    tend_hosp_plot.get_figure().savefig(
+        os.path.join(project_dir, 'reports/figures/' + today + '/hospitalisations-tendances.png'))
     tend_hosp_plot.get_figure().clear()
 
     tend_rea_plot = last_month_df.sum()['rea'].plot(title=last_month_title + ' - Réanimations', figsize=(10, 10))
-    tend_rea_plot.get_figure().savefig(os.path.join(project_dir, 'reports/figures/' + today + '/reanimations-tendances.png'))
+    tend_rea_plot.get_figure().savefig(
+        os.path.join(project_dir, 'reports/figures/' + today + '/reanimations-tendances.png'))
     tend_rea_plot.get_figure().clear()
 
     tend_rad_plot = last_month_df.sum()['rad'].plot(title=last_month_title + ' - Retours à domicile', figsize=(10, 10))
-    tend_rad_plot.get_figure().savefig(os.path.join(project_dir, 'reports/figures/' + today + '/retours-a-domicile-tendances.png'))
+    tend_rad_plot.get_figure().savefig(
+        os.path.join(project_dir, 'reports/figures/' + today + '/retours-a-domicile-tendances.png'))
     tend_rad_plot.get_figure().clear()
 
     tend_dc_plot = last_month_df.sum()['dc'].plot(title=last_month_title + ' - Décès', figsize=(10, 10))
     tend_dc_plot.get_figure().savefig(os.path.join(project_dir, 'reports/figures/' + today + '/deces-tendances.png'))
     tend_dc_plot.get_figure().clear()
 
-
     # All time
     covid_df_grouped = covid_df.where(all_gender_filter).groupby('jour')
     at_hosp_plot = covid_df_grouped.sum()['hosp'].plot(title='Hospitalisations dues au COVID-19',
-                                                                   figsize=(10, 10))
+                                                       figsize=(10, 10))
     at_hosp_plot.get_figure().savefig(os.path.join(project_dir, 'reports/figures/' + today + '/hospitalisations.png'))
     at_hosp_plot.get_figure().clear()
 
     at_rea_plot = covid_df_grouped.sum()['rea'].plot(title='Réanimations dues au COVID-19',
-                                                                  figsize=(10, 10))
+                                                     figsize=(10, 10))
     at_rea_plot.get_figure().savefig(os.path.join(project_dir, 'reports/figures/' + today + '/reanimations.png'))
     at_rea_plot.get_figure().clear()
 
@@ -91,21 +96,23 @@ def main(project_dir):
     at_dc_plot.get_figure().savefig(os.path.join(project_dir, 'reports/figures/' + today + '/deces.png'))
     at_hosp_plot.get_figure().clear()
 
-    ca_hosp_plot = classe_age_df.groupby(['jour', 'cl_age90']).sum()['hosp'].unstack(-1)\
-        .plot(kind='area', title='Hospitalisations en fonction de l''âge', figsize=(10, 10))\
+    ca_hosp_plot = classe_age_df.groupby(['jour', 'cl_age90']).sum()['hosp'].unstack(-1) \
+        .plot(kind='area', title='Hospitalisations en fonction de l''âge', figsize=(10, 10)) \
         .legend(loc='upper right', title='Âge', ncol=3)
-    ca_hosp_plot.get_figure().savefig(os.path.join(project_dir, 'reports/figures/' + today + '/hospitalisations-par-age.png'))
+    ca_hosp_plot.get_figure().savefig(
+        os.path.join(project_dir, 'reports/figures/' + today + '/hospitalisations-par-age.png'))
     ca_hosp_plot.get_figure().clear()
 
-    ca_rea_plot = classe_age_df.groupby(['jour', 'cl_age90']).sum()['rea'].unstack(-1)\
-        .plot(kind = 'area', title='Réanimations en fonction de l''âge', figsize = (10, 10))\
-        .legend(loc='upper right', title = 'Âge', ncol=3)
-    ca_rea_plot.get_figure().savefig(os.path.join(project_dir, 'reports/figures/' + today + '/reanimations-par-age.png'))
+    ca_rea_plot = classe_age_df.groupby(['jour', 'cl_age90']).sum()['rea'].unstack(-1) \
+        .plot(kind='area', title='Réanimations en fonction de l''âge', figsize=(10, 10)) \
+        .legend(loc='upper right', title='Âge', ncol=3)
+    ca_rea_plot.get_figure().savefig(
+        os.path.join(project_dir, 'reports/figures/' + today + '/reanimations-par-age.png'))
     ca_rea_plot.get_figure().clear()
 
-    ca_dc_plot = classe_age_df.groupby(['jour', 'cl_age90']).sum()['dc'].unstack(-1)\
-        .plot(kind = 'area', title='Décès en fonction de l''âge', figsize = (10, 10))\
-        .legend(loc='upper right', title = 'Âge', ncol=3)
+    ca_dc_plot = classe_age_df.groupby(['jour', 'cl_age90']).sum()['dc'].unstack(-1) \
+        .plot(kind='area', title='Décès en fonction de l''âge', figsize=(10, 10)) \
+        .legend(loc='upper right', title='Âge', ncol=3)
     ca_dc_plot.get_figure().savefig(os.path.join(project_dir, 'reports/figures/' + today + '/deces-par-age.png'))
     ca_dc_plot.get_figure().clear()
 
@@ -114,32 +121,104 @@ def main(project_dir):
     f_ca_hosp_plot = fixed_classe_age_df.sum()['hosp'].unstack(
         -1).plot(kind='area', title='Hospitalisations en fonction de l''âge', figsize=(10, 10)).legend(
         loc='upper right', title='Âge', ncol=3)
-    f_ca_hosp_plot.get_figure().savefig(os.path.join(project_dir, 'reports/figures/' + today + '/hospitalisations-par-age-v2.png'))
+    f_ca_hosp_plot.get_figure().savefig(
+        os.path.join(project_dir, 'reports/figures/' + today + '/hospitalisations-par-age-v2.png'))
     f_ca_hosp_plot.get_figure().clear()
 
-    f_ca_rea_plot = fixed_classe_age_df.sum()['rea'].unstack(-1)\
-        .plot(kind = 'area', title='Réanimations en fonction de l''âge', figsize = (10, 10))\
-        .legend(loc='upper right', title = 'Âge', ncol=3)
-    f_ca_rea_plot.get_figure().savefig(os.path.join(project_dir, 'reports/figures/' + today + '/reanimations-par-age-v2.png'))
+    f_ca_rea_plot = fixed_classe_age_df.sum()['rea'].unstack(-1) \
+        .plot(kind='area', title='Réanimations en fonction de l''âge', figsize=(10, 10)) \
+        .legend(loc='upper right', title='Âge', ncol=3)
+    f_ca_rea_plot.get_figure().savefig(
+        os.path.join(project_dir, 'reports/figures/' + today + '/reanimations-par-age-v2.png'))
     f_ca_rea_plot.get_figure().clear()
 
-    f_ca_dc_plot = fixed_classe_age_df.sum()['dc'].unstack(-1)\
-        .plot(kind = 'area', title='Décès en fonction de l''âge', figsize = (10, 10))\
-        .legend(loc='upper right', title = 'Âge', ncol=3)
+    f_ca_dc_plot = fixed_classe_age_df.sum()['dc'].unstack(-1) \
+        .plot(kind='area', title='Décès en fonction de l''âge', figsize=(10, 10)) \
+        .legend(loc='upper right', title='Âge', ncol=3)
     f_ca_dc_plot.get_figure().savefig(os.path.join(project_dir, 'reports/figures/' + today + '/deces-par-age-v2.png'))
     f_ca_dc_plot.get_figure().clear()
 
-    new_hosp_plot = nouveau_df.groupby(['jour']).sum()['incid_hosp'].plot(title = 'Hospitalisations - Nouveaux cas', figsize = (10, 10))
-    new_hosp_plot.get_figure().savefig(os.path.join(project_dir, 'reports/figures/' + today + '/hospitalisations-nouveaux.png'))
+    new_hosp_plot = nouveau_df.groupby(['jour']).sum()['incid_hosp'].plot(title='Hospitalisations - Nouveaux cas',
+                                                                          figsize=(10, 10))
+    new_hosp_plot.get_figure().savefig(
+        os.path.join(project_dir, 'reports/figures/' + today + '/hospitalisations-nouveaux.png'))
     new_hosp_plot.get_figure().clear()
 
-    new_rea_plot = nouveau_df.groupby(['jour']).sum()['incid_rea'].plot(title = 'Réanimations - Nouveaux cas', figsize = (10, 10))
-    new_rea_plot.get_figure().savefig(os.path.join(project_dir, 'reports/figures/' + today + '/reanimations-nouveaux.png'))
+    new_rea_plot = nouveau_df.groupby(['jour']).sum()['incid_rea'].plot(title='Réanimations - Nouveaux cas',
+                                                                        figsize=(10, 10))
+    new_rea_plot.get_figure().savefig(
+        os.path.join(project_dir, 'reports/figures/' + today + '/reanimations-nouveaux.png'))
     new_rea_plot.get_figure().clear()
 
-    new_dc_plot = nouveau_df.groupby(['jour']).sum()['incid_dc'].plot(title = 'Nouveaux décès', figsize = (10, 10))
+    new_dc_plot = nouveau_df.groupby(['jour']).sum()['incid_dc'].plot(title='Nouveaux décès', figsize=(10, 10))
     new_dc_plot.get_figure().savefig(os.path.join(project_dir, 'reports/figures/' + today + '/deces-nouveaux.png'))
     new_dc_plot.get_figure().clear()
+
+    # 1 - 95
+    for dep in range(1, 96):
+        plot_for_department("{:02d}".format(dep), covid_df)
+
+    # 971 - 976
+    for dep in range(971, 977):
+        plot_for_department(str(dep), covid_df)
+
+    logger.info('Done')
+
+
+def plot_for_department(department, all_time_df):
+    today = date.today().strftime('%Y-%m-%d')
+    create_directory_if_necessary(os.path.join(project_dir, 'reports/figures/' + today + '/departements/'))
+    create_directory_if_necessary(os.path.join(project_dir, 'reports/figures/' + today + '/departements/' + department))
+
+    plot_all_time(department, all_time_df)
+
+
+def plot_all_time(department, all_time_df):
+    today = date.today().strftime('%Y-%m-%d')
+    all_gender_filter = all_time_df['sexe'] == 0
+    plot_and_save(department,
+                  'Hospitalisations dues au COVID-19',
+                  os.path.join(project_dir,
+                               'reports/figures/' + today + '/departements/' + department + '/hospitalisations.png'),
+                  all_time_df.where(all_gender_filter),
+                  'hosp',
+                  PlotType.ALL_TIME)
+
+    plot_and_save(department,
+                  'Réanimations dues au COVID-19',
+                  os.path.join(project_dir,
+                               'reports/figures/' + today + '/departements/' + department + '/reanimations.png'),
+                  all_time_df.where(all_gender_filter),
+                  'rea',
+                  PlotType.ALL_TIME)
+
+    plot_and_save(department,
+                  'Décès dues au COVID-19',
+                  os.path.join(project_dir,
+                               'reports/figures/' + today + '/departements/' + department + '/deces.png'),
+                  all_time_df.where(all_gender_filter),
+                  'dc',
+                  PlotType.ALL_TIME)
+
+    plot_and_save(department,
+                  'Retours à domicile',
+                  os.path.join(project_dir,
+                               'reports/figures/' + today + '/departements/' + department + '/retours-a-domicile.png'),
+                  all_time_df.where(all_gender_filter),
+                  'rad',
+                  PlotType.ALL_TIME)
+
+
+def plot_and_save(department, plot_title, filename, df, prop, plot_type):
+    if plot_type == PlotType.ALL_TIME:
+        if department is None:
+            plot = df.groupby('jour').sum()[prop].plot(title=plot_title, figsize=(10, 10))
+        else:
+            # pour classes-age dep = reg
+            plot = df.where(df['dep'] == department).groupby('jour').sum()[prop] \
+                .plot(title=plot_title + ' - ' + department, figsize=(10, 10))
+        plot.get_figure().savefig(filename)
+        plot.get_figure().clear()
 
 
 def create_directory_if_necessary(path):
@@ -155,6 +234,7 @@ def create_directory_if_necessary(path):
         os.mkdir(path)
     except OSError as error:
         logger.info('folder already exists: ' + path)
+
 
 if __name__ == '__main__':
     # getting root directory
