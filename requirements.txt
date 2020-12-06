@@ -11,3 +11,5 @@ python-dotenv>=0.5.1
 
 requests~=2.22.0
 setuptools~=45.2.0
+
+Pillow

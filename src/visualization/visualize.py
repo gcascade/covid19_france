@@ -5,6 +5,7 @@ import numpy as np
 import re
 from datetime import date, timedelta
 from dotenv import find_dotenv, load_dotenv
+from PIL import Image, ImageFilter
 
 from src.enum.PlotType import PlotType
 
@@ -155,22 +156,35 @@ def main(project_dir):
     new_dc_plot.get_figure().clear()
 
     # 1 - 95
-    for dep in range(1, 96):
-        plot_for_department("{:02d}".format(dep), covid_df)
+    french_departments = []
+    french_departments.extend(range(1, 20))
+    french_departments.extend(['2A', '2B'])
+    french_departments.extend(range(21, 96))
+    for dep in french_departments:
+        if isinstance(dep, int):
+            plot_for_department("{:02d}".format(dep), covid_df, nouveau_df)
+        else:
+            plot_for_department(dep, covid_df, nouveau_df)
 
     # 971 - 976
     for dep in range(971, 977):
-        plot_for_department(str(dep), covid_df)
+        plot_for_department(str(dep), covid_df, nouveau_df)
+
+    generate_gifs(project_dir)
 
     logger.info('Done')
 
 
-def plot_for_department(department, all_time_df):
+def plot_for_department(department, all_time_df, new_df):
     today = date.today().strftime('%Y-%m-%d')
     create_directory_if_necessary(os.path.join(project_dir, 'reports/figures/' + today + '/departements/'))
     create_directory_if_necessary(os.path.join(project_dir, 'reports/figures/' + today + '/departements/' + department))
 
-    plot_all_time(department, all_time_df)
+    if all_time_df is not None:
+        plot_all_time(department, all_time_df)
+
+    if new_df is not None:
+        plot_new(department, new_df)
 
 
 def plot_all_time(department, all_time_df):
@@ -209,6 +223,33 @@ def plot_all_time(department, all_time_df):
                   PlotType.ALL_TIME)
 
 
+def plot_new(department, new_df):
+    today = date.today().strftime('%Y-%m-%d')
+    plot_and_save(department,
+                  'Hospitalisations - Nouveaux cas',
+                  os.path.join(project_dir,
+                               'reports/figures/' + today + '/departements/' + department + '/hospitalisations-nouveaux.png'),
+                  new_df,
+                  'incid_hosp',
+                  PlotType.NEW)
+
+    plot_and_save(department,
+                  'Réanimations - Nouveaux cas',
+                  os.path.join(project_dir,
+                               'reports/figures/' + today + '/departements/' + department + '/reanimations-nouveaux.png'),
+                  new_df,
+                  'incid_rea',
+                  PlotType.NEW)
+
+    plot_and_save(department,
+                  'Nouveaux décès',
+                  os.path.join(project_dir,
+                               'reports/figures/' + today + '/departements/' + department + '/deces-nouveaux.png'),
+                  new_df,
+                  'incid_dc',
+                  PlotType.NEW)
+
+
 def plot_and_save(department, plot_title, filename, df, prop, plot_type):
     if plot_type == PlotType.ALL_TIME:
         if department is None:
@@ -216,6 +257,14 @@ def plot_and_save(department, plot_title, filename, df, prop, plot_type):
         else:
             # pour classes-age dep = reg
             plot = df.where(df['dep'] == department).groupby('jour').sum()[prop] \
+                .plot(title=plot_title + ' - ' + department, figsize=(10, 10))
+        plot.get_figure().savefig(filename)
+        plot.get_figure().clear()
+    elif plot_type == PlotType.NEW:
+        if department is None:
+            plot = df.groupby(['jour']).sum()[prop].plot(title=plot_title, figsize=(10, 10))
+        else:
+            plot = df.where(df['dep'] == department).groupby(['jour']).sum()[prop] \
                 .plot(title=plot_title + ' - ' + department, figsize=(10, 10))
         plot.get_figure().savefig(filename)
         plot.get_figure().clear()
@@ -231,9 +280,84 @@ def create_directory_if_necessary(path):
     # create folder if necessary
     logger.info('creating folder ' + path)
     try:
-        os.mkdir(path)
+        os.makedirs(path)
     except OSError as error:
         logger.info('folder already exists: ' + path)
+
+def generate_gifs(project_dir):
+    today = date.today().strftime('%Y-%m-%d')
+    figure_directory = 'reports/figures/' + today
+    gifs_directory = 'reports/gifs/' + today
+    new_hospitalisations_filename = 'hospitalisations-nouveaux.png'
+    new_intensive_filename = 'reanimations-nouveaux.png'
+    new_deaths_filename = 'deces-nouveaux.png'
+    hospitalisations_filename = 'hospitalisations.png'
+    intensive_filename = 'reanimations.png'
+    deaths_filename = 'deces.png'
+    cured_filename = 'retours-a-domicile.png'
+
+    new_hospitalisations_filenames = [os.path.join(project_dir, figure_directory + '/' + new_hospitalisations_filename)]
+    new_intensive_filenames = [os.path.join(project_dir, figure_directory + '/' + new_intensive_filename)]
+    new_deaths_filenames = [os.path.join(project_dir, figure_directory + '/' + new_deaths_filename)]
+    hospitalisations_filenames = [os.path.join(project_dir, figure_directory + '/' + hospitalisations_filename)]
+    intensive_filenames = [os.path.join(project_dir, figure_directory + '/' + intensive_filename)]
+    deaths_filenames = [os.path.join(project_dir, figure_directory + '/' + deaths_filename)]
+    cured_filenames = [os.path.join(project_dir, figure_directory + '/' + cured_filename)]
+
+    french_departments = []
+    french_departments.extend(range(1, 20))
+    french_departments.extend(['2A', '2B'])
+    french_departments.extend(range(21, 96))
+    for dep in french_departments:
+        if (isinstance(dep, int)):
+            new_hospitalisations_filenames.append(os.path.join(project_dir, figure_directory +'/departements/' + "{:02d}".format(dep) + '/' + new_hospitalisations_filename))
+            new_intensive_filenames.append(os.path.join(project_dir, figure_directory + '/departements/' + "{:02d}".format(dep) + '/' + new_intensive_filename))
+            new_deaths_filenames.append(os.path.join(project_dir, figure_directory + '/departements/' + "{:02d}".format(dep) + '/' + new_deaths_filename))
+            hospitalisations_filenames.append(os.path.join(project_dir, figure_directory + '/departements/' + "{:02d}".format(dep) + '/' + hospitalisations_filename))
+            intensive_filenames.append(os.path.join(project_dir, figure_directory + '/departements/' + "{:02d}".format(dep) + '/' + intensive_filename))
+            deaths_filenames.append(os.path.join(project_dir, figure_directory + '/departements/' + "{:02d}".format(dep) + '/' + deaths_filename))
+            cured_filenames.append(os.path.join(project_dir, figure_directory + '/departements/' + "{:02d}".format(dep) + '/' + cured_filename))
+        else:
+            new_hospitalisations_filenames.append(os.path.join(project_dir, figure_directory +'/departements/' + dep + '/' + new_hospitalisations_filename))
+            new_intensive_filenames.append(os.path.join(project_dir, figure_directory + '/departements/' + dep + '/' + new_intensive_filename))
+            new_deaths_filenames.append(os.path.join(project_dir, figure_directory + '/departements/' + dep + '/' + new_deaths_filename))
+            hospitalisations_filenames.append(os.path.join(project_dir, figure_directory + '/departements/' + dep + '/' + hospitalisations_filename))
+            intensive_filenames.append(os.path.join(project_dir, figure_directory + '/departements/' + dep + '/' + intensive_filename))
+            deaths_filenames.append(os.path.join(project_dir, figure_directory + '/departements/' + dep + '/' + deaths_filename))
+            cured_filenames.append(os.path.join(project_dir, figure_directory + '/departements/' + dep + '/' + cured_filename))
+    dom_tom = [971, 972, 973, 974, 976]
+    for dep in dom_tom:
+        new_hospitalisations_filenames.append(os.path.join(project_dir, figure_directory + '/departements/' + str(dep) + '/' + new_hospitalisations_filename))
+        new_intensive_filenames.append(os.path.join(project_dir, figure_directory + '/departements/' + str(dep) + '/' + new_intensive_filename))
+        new_deaths_filenames.append(os.path.join(project_dir, figure_directory + '/departements/' + str(dep) + '/' + new_deaths_filename))
+        hospitalisations_filenames.append(os.path.join(project_dir, figure_directory + '/departements/' + str(dep) + '/' + hospitalisations_filename))
+        intensive_filenames.append(os.path.join(project_dir, figure_directory + '/departements/' + str(dep) + '/' + intensive_filename))
+        deaths_filenames.append(os.path.join(project_dir, figure_directory + '/departements/' + str(dep) + '/' + deaths_filename))
+        cured_filenames.append(os.path.join(project_dir, figure_directory + '/departements/' + str(dep) + '/' + cured_filename))
+    create_gif(new_hospitalisations_filenames, os.path.join(project_dir, gifs_directory), 'hospitalisations-nouveaux.gif', 60000)
+    create_gif(new_intensive_filenames, os.path.join(project_dir, gifs_directory), 'reanimations-nouveaux.gif', 60000)
+    create_gif(new_deaths_filenames, os.path.join(project_dir, gifs_directory), 'deces-nouveaux.gif', 60000)
+    create_gif(hospitalisations_filenames, os.path.join(project_dir, gifs_directory), 'hospitalisations.gif', 60000)
+    create_gif(intensive_filenames, os.path.join(project_dir, gifs_directory), 'reanimations.gif', 60000)
+    create_gif(deaths_filenames, os.path.join(project_dir, gifs_directory), 'deces.gif', 60000)
+    create_gif(cured_filenames, os.path.join(project_dir, gifs_directory), 'retours-a-domicile.gif', 60000)
+
+
+def create_gif(filenames, dest_path, dest_filename, total_duration):
+    # get logger
+    logger = logging.getLogger(__name__)
+
+    images = []
+
+    for filename in filenames:
+        images.append(Image.open(filename))
+
+    create_directory_if_necessary(dest_path)
+
+    logger.info('saving '+ os.path.join(dest_path, dest_filename))
+
+    images[0].save(os.path.join(dest_path, dest_filename),
+                   save_all=True, append_images=images[1:], optimize=False, duration=total_duration / len(images), loop=0)
 
 
 if __name__ == '__main__':
